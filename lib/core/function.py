@@ -119,7 +119,7 @@ def fpd_train(config, train_loader, model, tmodel, pose_criterion, kd_pose_crite
         outputs = model(input)
         toutput = tmodel(input)
         if isinstance(toutput, list):
-            toutput = toutput[-1]
+            toutput = toutput[-1] # wh: why use the last element?
 
         target = target.cuda(non_blocking=True)
         target_weight = target_weight.cuda(non_blocking=True)

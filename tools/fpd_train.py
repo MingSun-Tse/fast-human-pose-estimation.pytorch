@@ -13,6 +13,7 @@ import argparse
 import os
 import pprint
 import shutil
+import matplotlib; matplotlib.use("Agg")
 
 import torch
 import torch.nn.parallel
@@ -129,7 +130,7 @@ def main():
         tcfg.defrost()
         tcfg.merge_from_file(args.tcfg)
         tcfg.freeze()
-        tcfg_name = 'teacher_' + os.path.basename(args.tcfg).split('.')[0]
+        tcfg_name = 'teacher_' + os.path.basename(args.tcfg).split('.')[0] # teacher_w48_256x256_adam_lr1e-3.yaml
         save_yaml_file(tcfg_name, tcfg, final_output_dir)
         # teacher model
         tmodel = eval('models.'+tcfg.MODEL.NAME+'.get_pose_net')(
@@ -138,9 +139,9 @@ def main():
 
         load_checkpoint(t_checkpoints, tmodel,
                         strict=True,
-                        model_info='teacher_'+tcfg.MODEL.NAME)
-
+                        model_info='teacher_'+tcfg.MODEL.NAME) # load teacher model
         tmodel = torch.nn.DataParallel(tmodel, device_ids=cfg.GPUS).cuda()
+        
         # define kd_pose loss function (criterion) and optimizer
         kd_pose_criterion = JointsMSELoss(
             use_target_weight=tcfg.LOSS.USE_TARGET_WEIGHT
@@ -162,7 +163,7 @@ def main():
     dump_input = torch.rand(
         (1, 3, cfg.MODEL.IMAGE_SIZE[1], cfg.MODEL.IMAGE_SIZE[0])
     )
-    writer_dict['writer'].add_graph(model, (dump_input, ))
+    # writer_dict['writer'].add_graph(model, (dump_input, ))
 
     logger.info(get_model_summary(model, dump_input))
 
@@ -170,6 +171,7 @@ def main():
         load_checkpoint(cfg.TRAIN.CHECKPOINT, model,
                     strict=True,
                     model_info='student_'+cfg.MODEL.NAME)
+    
     model = torch.nn.DataParallel(model, device_ids=cfg.GPUS).cuda()
 
     # you can choose or replace pose_loss and kd_pose_loss type, including mse,kl,ohkm loss ect
@@ -220,7 +222,8 @@ def main():
     checkpoint_file = os.path.join(
         final_output_dir, 'checkpoint.pth'
     )
-
+    
+    # resume the Student model
     if cfg.AUTO_RESUME and os.path.exists(checkpoint_file):
         logger.info("=> loading checkpoint '{}'".format(checkpoint_file))
         checkpoint = torch.load(checkpoint_file)
@@ -238,16 +241,15 @@ def main():
         last_epoch=last_epoch
     )
 
-
     # evaluate on validation set
-    validate(
-        cfg, valid_loader, valid_dataset, tmodel, pose_criterion,
-        final_output_dir, tb_log_dir, writer_dict
-    )
-    validate(
-        cfg, valid_loader, valid_dataset, model, pose_criterion,
-       final_output_dir, tb_log_dir, writer_dict
-    )
+    # validate(
+        # cfg, valid_loader, valid_dataset, tmodel, pose_criterion,
+        # final_output_dir, tb_log_dir, writer_dict
+    # )
+    # validate(
+        # cfg, valid_loader, valid_dataset, model, pose_criterion,
+       # final_output_dir, tb_log_dir, writer_dict
+    # )
 
     for epoch in range(begin_epoch, cfg.TRAIN.END_EPOCH):
         lr_scheduler.step()
