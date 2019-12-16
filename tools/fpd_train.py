@@ -186,6 +186,8 @@ def main():
     normalize = transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
     )
+    
+    logger.info("===> prepare training dataset")
     train_dataset = eval('dataset.'+cfg.DATASET.DATASET)(
         cfg, cfg.DATASET.ROOT, cfg.DATASET.TRAIN_SET, True,
         transforms.Compose([
@@ -193,20 +195,21 @@ def main():
             normalize,
         ])
     )
-    valid_dataset = eval('dataset.'+cfg.DATASET.DATASET)(
-        cfg, cfg.DATASET.ROOT, cfg.DATASET.TEST_SET, False,
-        transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])
-    )
-
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=cfg.TRAIN.BATCH_SIZE_PER_GPU*len(cfg.GPUS),
         shuffle=cfg.TRAIN.SHUFFLE,
         num_workers=cfg.WORKERS,
         pin_memory=cfg.PIN_MEMORY
+    )
+    
+    logger.info("\n===> prepare validation dataset")
+    valid_dataset = eval('dataset.'+cfg.DATASET.DATASET)(
+        cfg, cfg.DATASET.ROOT, cfg.DATASET.TEST_SET, False,
+        transforms.Compose([
+            transforms.ToTensor(),
+            normalize,
+        ])
     )
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset,
@@ -227,7 +230,7 @@ def main():
     
     # resume the Student model
     if cfg.AUTO_RESUME and os.path.exists(checkpoint_file):
-        logger.info("=> loading checkpoint '{}'".format(checkpoint_file))
+        logger.info("=> loading checkpoint '{}' (for student!)".format(checkpoint_file))
         checkpoint = torch.load(checkpoint_file)
         begin_epoch = checkpoint['epoch']
         best_perf = checkpoint['perf']
@@ -243,7 +246,7 @@ def main():
         last_epoch=last_epoch
     )
 
-    # evaluate on validation set
+    # Test on validation set
     # validate(
         # cfg, valid_loader, valid_dataset, tmodel, pose_criterion,
         # final_output_dir, tb_log_dir, writer_dict
