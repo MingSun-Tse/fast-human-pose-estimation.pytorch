@@ -87,7 +87,7 @@ class COCODataset(JointsDataset):
         # load image file names
         self.image_set_index = self._load_image_set_index()
         self.num_images = len(self.image_set_index)
-        logger.info('=> num_images: {}'.format(self.num_images))
+        logger.info('=> num_images: {} (in the train dataset. COCO train2017: 118287)'.format(self.num_images))
 
         self.num_joints = 17
         self.flip_pairs = [[1, 2], [3, 4], [5, 6], [7, 8],
@@ -120,7 +120,7 @@ class COCODataset(JointsDataset):
         if is_train and cfg.DATASET.SELECT_DATA:
             self.db = self.select_data(self.db)
 
-        logger.info('=> load {} samples'.format(len(self.db)))
+        logger.info('=> load {} samples (Note: one image can make multiple samples.)'.format(len(self.db)))
 
     def _get_ann_file_keypoint(self):
         """ self.root / annotations / person_keypoints_train2017.json """
