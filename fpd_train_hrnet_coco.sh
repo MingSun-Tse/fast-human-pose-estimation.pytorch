@@ -24,7 +24,8 @@ python tools/fpd_train.py \
     TRAIN.END_EPOCH 210 \
     TRAIN.LR 0.001 \
     TRAIN.LR_STEP 170,200 \
-    TEST.BATCH_SIZE_PER_GPU 32 `# TRAIN.CHECKPOINT 'models/pytorch/pose_coco/pose_hrnet_w32_256x192.pth'` \
+    TEST.BATCH_SIZE_PER_GPU 32 \
+    TRAIN.CHECKPOINT 'models/pytorch/pose_coco/pose_bin_256x192.pth' \
     TEST.USE_GT_BBOX False \
     DEBUG.DEBUG False \
     KD.TRAIN_TYPE 'FPD' `#FPD`\

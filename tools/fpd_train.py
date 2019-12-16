@@ -120,10 +120,7 @@ def main():
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED
 
-    model = eval('models.'+cfg.MODEL.NAME+'.get_pose_net')(
-        cfg, is_train=True
-    )
-
+    # Prepare teacher network
     # fpd method, default NORMAL
     if train_type == 'FPD':
         tcfg = cfg.clone()
@@ -146,7 +143,12 @@ def main():
         kd_pose_criterion = JointsMSELoss(
             use_target_weight=tcfg.LOSS.USE_TARGET_WEIGHT
         ).cuda()
-
+    
+    # Prepare student network
+    model = eval('models.'+cfg.MODEL.NAME+'.get_pose_net')(
+        cfg, is_train=True
+    )
+    
     # copy model file
     this_dir = os.path.dirname(__file__)
     shutil.copy2(
@@ -170,7 +172,7 @@ def main():
     if cfg.TRAIN.CHECKPOINT:
         load_checkpoint(cfg.TRAIN.CHECKPOINT, model,
                     strict=True,
-                    model_info='student_'+cfg.MODEL.NAME)
+                    model_info='student_' + cfg.MODEL.NAME)
     
     model = torch.nn.DataParallel(model, device_ids=cfg.GPUS).cuda()
 
